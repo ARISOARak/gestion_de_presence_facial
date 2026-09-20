@@ -1,0 +1,39 @@
+@"
+# Python
+__pycache__/
+*.py[cod]
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+
+# Bases de données
+*.db
+*.sql
+*.sqlite
+*.sqlite3
+
+# Données lourdes
+data/
+data_entrainement/
+encodings.pkl
+encodings_faces.pickle
+face_encodings.pkl
+entrainement.h5
+labels.json
+
+# Node
+node_modules/
+
+# Bibliothèque d'icônes externe (chemins trop longs)
+icons/material-design-icons-4.0.0/
+
+# Divers
+.env
+.env.local
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+"@ | Out-File -Encoding utf8 -NoNewline .gitignore

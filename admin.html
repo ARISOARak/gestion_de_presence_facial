@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentification Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Styles Tailwind-like pour la clarté et le design */
+        :root {
+            --primary-color: #4a6fff;
+            --danger-color: #dc3545;
+            --success-color: #28a745;
+            --background-color: #f5f7fb;
+        }
+
+        body {
+            background-color: var(--background-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+        }
+
+        .auth-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            margin-bottom: 2rem;
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            margin-top: 1rem;
+        }
+
+        .btn-primary:hover {
+            background-color: #3b5ce6;
+        }
+
+        .btn:active {
+            transform: scale(0.99);
+        }
+
+        .toggle-link {
+            display: block;
+            margin-top: 1.5rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .message {
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: var(--success-color);
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: var(--danger-color);
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Affichage des formulaires */
+        #login-form-container.hidden, #register-form-container.hidden {
+            display: none;
+        }
+
+        /* Style pour désactiver les boutons pendant le chargement */
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div id="login-form-container">
+            <h1>Connexion Admin</h1>
+            <p class="subtitle">Accédez à votre tableau de bord sécurisé.</p>
+            <div id="login-message" class="message"></div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Mot de passe</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" id="login-btn" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Se connecter
+                </button>
+            </form>
+            <span class="toggle-link" onclick="toggleForm('register')">Pas de compte? S'inscrire ici.</span>
+        </div>
+
+        <div id="register-form-container" class="hidden">
+            <h1>Inscription Admin</h1>
+            <p class="subtitle">Créer un nouveau compte administrateur.</p>
+            <div id="register-message" class="message"></div>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Mot de passe</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <button type="submit" id="register-btn" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> S'inscrire
+                </button>
+            </form>
+            <span class="toggle-link" onclick="toggleForm('login')">Déjà un compte? Se connecter ici.</span>
+        </div>
+    </div>
+
+    <script>
+        // NOTE: L'API Flask est supposée être sur le port 5000
+        const API_BASE_URL = 'http://localhost:5001/api/auth'; 
+
+        // --- Fonctions Utilitaires ---
+
+        function showMessage(id, text, isError) {
+            const el = document.getElementById(id);
+            el.textContent = text;
+            el.className = 'message ' + (isError ? 'error' : 'success');
+            el.style.display = 'block';
+        }
+
+        function toggleForm(target) {
+            document.getElementById('login-form-container').classList.toggle('hidden', target !== 'login');
+            document.getElementById('register-form-container').classList.toggle('hidden', target !== 'register');
+            document.getElementById('login-message').style.display = 'none';
+            document.getElementById('register-message').style.display = 'none';
+        }
+
+        async function postData(url, data) {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            return response;
+        }
+
+        // --- Inscription ---
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const btn = document.getElementById('register-btn');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Inscription...';
+            document.getElementById('register-message').style.display = 'none';
+
+            try {
+                const response = await postData(`${API_BASE_URL}/register`, { email, password });
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('register-message', data.message, false);
+                    // Rediriger vers la connexion après 3 secondes
+                    setTimeout(() => toggleForm('login'), 3000);
+                } else {
+                    showMessage('register-message', data.message || 'Erreur inconnue lors de l\'inscription.', true);
+                }
+            } catch (error) {
+                console.error('Erreur réseau:', error);
+                showMessage('register-message', 'Impossible de se connecter au serveur API.', true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-user-plus"></i> S\'inscrire';
+            }
+        });
+
+        // --- Connexion ---
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('login-btn');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connexion...';
+            document.getElementById('login-message').style.display = 'none';
+
+            try {
+                const response = await postData(`${API_BASE_URL}/login`, { email, password });
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showMessage('login-message', data.message, false);
+                    
+                    // Stocker l'état de connexion et rediriger
+                    sessionStorage.setItem('isAdminLoggedIn', 'true');
+                    sessionStorage.setItem('adminEmail', email);
+
+                    setTimeout(() => {
+                        window.location.href = 'board.html'; // Redirection vers le tableau de bord
+                    }, 1000);
+
+                } else {
+                    showMessage('login-message', data.message || 'Échec de la connexion.', true);
+                }
+            } catch (error) {
+                console.error('Erreur réseau:', error);
+                showMessage('login-message', 'Impossible de se connecter au serveur API.', true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Se connecter';
+            }
+        });
+    </script>
+</body>
+</html>

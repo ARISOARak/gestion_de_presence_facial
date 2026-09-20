@@ -1,0 +1,15 @@
+{
+  "name": "uiusers",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^29.0.0"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  }
+}
